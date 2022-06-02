@@ -1,0 +1,15 @@
+service: cfp-api
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+
+functions:
+  cfp:
+    handler: handler.cfp
+    events:
+      - http:
+          path: /cfp
+          method: post
+          cors: true
