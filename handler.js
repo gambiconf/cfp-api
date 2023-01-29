@@ -16,9 +16,7 @@ const validate = async (body) => {
     email: yup.string().email().required(),
   })
 
-  const isValid = await schema.isValid(body)
-
-  return isValid
+  return await schema.isValid(body)
 }
 
 const cfp = async (event) => {
