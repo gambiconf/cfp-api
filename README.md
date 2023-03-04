@@ -44,3 +44,7 @@ The current dependencies we have are:
 7. Create a spreadsheet on Google Sheets with this content as the first line `name	title	description	duration	format	bio	social	email`, and the name of the Sheet in the bottom left of the page should be `CFP`;
 8. Then you should share this spreadsheet with the e-mail created by the new service account (Editor permission!);
 9. Finally copy the spreadsheet ID in the URL, eg: `1BSANxGdLChMVWYL7k8sDj0ekRQGrwWDEHdeFctiLZRo`, and change the environment variable.
+
+### Example
+
+Once you have AWS and GCP set up, you can run `npm run example`, that should send an e-mail and append a line to the spreadsheet ID defined :)
