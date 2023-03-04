@@ -1,11 +1,12 @@
 'use strict'
 
+require('dotenv').config()
 const { GoogleSpreadsheet } = require('google-spreadsheet')
 const clientSecret = require('./client_secret.json')
 const yup = require('yup')
 const AWS = require('aws-sdk')
 
-AWS.config.update({region: clientSecret.region})
+AWS.config.update({region: process.env.AWS_REGION})
 const ses = new AWS.SES({apiVersion: '2010-12-01'})
 
 const validate = async (body) => {
@@ -25,7 +26,7 @@ const validate = async (body) => {
 
 const sendMail = async (body) => {
     const params = {
-      Source: 'bruno.macabeus@gmail.com',
+      Source: process.env.EMAIL,
       Destination: { 
         ToAddresses: [
           body.email
@@ -60,7 +61,7 @@ const sendMail = async (body) => {
 
 const cfp = async (event) => {
   try {
-    const googleSheetID = '1u6BXqKLXojnyS8wHESGhYM3YkddBN44hmv166ZzKU44'
+    const googleSheetID = process.env.SHEET_ID
     const sheet = new GoogleSpreadsheet(googleSheetID)
     await sheet.useServiceAccountAuth(clientSecret)
     await sheet.loadInfo()
