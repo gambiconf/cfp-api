@@ -1,6 +1,9 @@
 service: cfp-api
 frameworkVersion: '3'
 
+plugins:
+  - serverless-bundle
+  - serverless-pseudo-parameters
 provider:
   name: aws
   runtime: nodejs14.x
@@ -11,5 +14,5 @@ functions:
     events:
       - http:
           path: /cfp
-          method: post
+          method: POST
           cors: true
