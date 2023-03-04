@@ -122,18 +122,4 @@ const cfp = async (event) => {
   }
 }
 
-// cfp({ input: { body: `{
-//   "name": "@bmacabeus",
-//   "talk title": "gameboy advance",
-//   "description": "kekekekek kekek sdf sdf sjfshjk shfjk fdsafsfsf fsafsdfs",
-//   "talk duration": 30,
-//   "format": "in-person",
-//   "bio": "fdfsd fsfsd fsf sfda fsafdfs",
-//   "social medias": "twitter\\nfacebook\\ninstagram",
-//   "email": "bruno.macabeus@gmail.com"
-// }
-// ` } }).catch((e) => {
-//   debugger
-// })
-
 module.exports.cfp = cfp
