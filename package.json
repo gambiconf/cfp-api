@@ -9,6 +9,7 @@
     "test": "jest"
   },
   "dependencies": {
+    "dotenv": "^16.0.3",
     "google-spreadsheet": "^3.2.0",
     "yup": "^0.32.11"
   },
