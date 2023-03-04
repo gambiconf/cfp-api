@@ -19,3 +19,14 @@ The current dependencies we have are:
 - AWS Lambda for running the handler;
 - GCP for the spreadsheet;
 - AWS SES for e-mail.
+
+### Setting up AWS
+
+1. First you'll need to have an AWS account, if you don't it's pretty straight forward to create one;
+2. Create a group in the [IAM page](https://us-east-1.console.aws.amazon.com/iamv2/home?region=us-east-1#/home) with these permissions:
+- AmazonSQSFullAccess;
+- AmazonSESFullAccess;
+- AWSLambda_FullAccess.
+3. Then an user attached to this group which you can generate "Access keys" from it;
+4. Put the credentials in `~/.aws/credentials`;
+5. Finally you can create a verified identity in SES [here](https://us-east-1.console.aws.amazon.com/ses/home?region=us-east-1#/verified-identities), which will be the e-mail used for sending the confirmation to who applied the talk.
