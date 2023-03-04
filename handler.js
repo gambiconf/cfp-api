@@ -123,3 +123,7 @@ const cfp = async (event) => {
 }
 
 module.exports.cfp = cfp
+
+module.exports.validate = validate
+
+module.exports.sendMail = sendMail
