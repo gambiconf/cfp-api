@@ -28,7 +28,7 @@ The current dependencies we have are:
 - AmazonSESFullAccess;
 - AWSLambda_FullAccess.
 3. Then an user attached to this group which you can generate "Access keys" from it;
-4. Put the credentials in `~/.aws/credentials`;
+4. Put the credentials in the `.env` file;
 5. Finally you can create a verified identity in SES [here](https://us-east-1.console.aws.amazon.com/ses/home?region=us-east-1#/verified-identities), which will be the e-mail used for sending the confirmation to who applied the talk.
 
 ### Setting up the Google Spreadsheet

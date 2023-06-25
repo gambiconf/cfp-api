@@ -4,10 +4,9 @@ require('dotenv').config()
 const { GoogleSpreadsheet } = require('google-spreadsheet')
 const clientSecret = require('./client_secret.json')
 const yup = require('yup')
-const AWS = require('aws-sdk')
+const { SES } = require("@aws-sdk/client-ses")
 
-AWS.config.update({region: process.env.AWS_REGION})
-const ses = new AWS.SES({apiVersion: '2010-12-01'})
+const ses = new SES({ apiVersion: '2010-12-01' })
 
 const validate = async (body) => {
   const schema = yup.object().shape({
@@ -45,7 +44,7 @@ const sendMail = async (body) => {
     }
     
     try {
-      const sendPromise = await ses.sendEmail(params).promise()
+      await ses.sendEmail(params)
       return {
         statusCode: 200,
         body: "Email sent"
