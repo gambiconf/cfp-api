@@ -3,7 +3,6 @@ frameworkVersion: '3'
 
 plugins:
   - serverless-bundle
-  - serverless-pseudo-parameters
 provider:
   name: aws
   runtime: nodejs14.x

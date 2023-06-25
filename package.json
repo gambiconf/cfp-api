@@ -7,12 +7,23 @@
   "license": "ISC",
   "scripts": {
     "test": "jest",
-    "example": "node example.js"
+    "example": "node example.js",
+    "lint": "eslint  --ignore-path .gitignore .",
+    "prettier-check": "prettier -c --ignore-path .gitignore \"**/*.{css,html,js,json,md,yaml,yml}\"",
+    "prettify": "prettier --write --ignore-path .gitignore \"**/*.{css,html,js,json,md,yaml,yml}\""
   },
   "dependencies": {
     "@aws-sdk/client-ses": "^3.359.0",
     "dotenv": "^16.3.1",
     "google-spreadsheet": "^3.3.0",
     "yup": "^1.2.0"
+  },
+  "devDependencies": {
+    "@serverless/eslint-config": "^5.1.0",
+    "eslint": "^7.32.0",
+    "eslint-plugin-import": "^2.27.5",
+    "prettier": "^2.8.8",
+    "serverless": "^3.32.2",
+    "serverless-bundle": "^6.0.0"
   }
 }

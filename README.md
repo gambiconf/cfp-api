@@ -24,9 +24,11 @@ The current dependencies we have are:
 
 1. First you'll need to have an AWS account, if you don't it's pretty straight forward to create one;
 2. Create a group in the [IAM page](https://us-east-1.console.aws.amazon.com/iamv2/home?region=us-east-1#/home) with these permissions:
+
 - AmazonSQSFullAccess;
 - AmazonSESFullAccess;
 - AWSLambda_FullAccess.
+
 3. Then an user attached to this group which you can generate "Access keys" from it;
 4. Put the credentials in the `.env` file;
 5. Finally you can create a verified identity in SES [here](https://us-east-1.console.aws.amazon.com/ses/home?region=us-east-1#/verified-identities), which will be the e-mail used for sending the confirmation to who applied the talk.
@@ -37,8 +39,10 @@ The current dependencies we have are:
 2. Create a GCP project;
 3. Go to "APIs & Services" > "Library" then search for "Google Sheets API" or go to [this URL](https://console.cloud.google.com/apis/library/sheets.googleapis.com) (this link might fail if you have multiple google accounts and/or projects in GCP). Then enable this API for your account/project;
 4. Then you can create a service account that will access the spreadsheet (in the credentials tab at the Google Sheets API page);
+
 - Choose whatever name fits best;
 - Add the "Editor" role and finish it.
+
 5. Go to the new service account page, then create JSON keys for it;
 6. You can move this file to the `cfp-api` folder, renaming it to `client_secret.json`;
 7. Create a spreadsheet on Google Sheets with this content as the first line `name	title	description	duration	format	bio	social	email`, and the name of the Sheet in the bottom left of the page should be `CFP`;

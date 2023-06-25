@@ -1,12 +1,10 @@
-'use strict'
+require('dotenv').config();
+const { GoogleSpreadsheet } = require('google-spreadsheet');
+const clientSecret = require('./client_secret.json');
+const yup = require('yup');
+const { SES } = require('@aws-sdk/client-ses');
 
-require('dotenv').config()
-const { GoogleSpreadsheet } = require('google-spreadsheet')
-const clientSecret = require('./client_secret.json')
-const yup = require('yup')
-const { SES } = require("@aws-sdk/client-ses")
-
-const ses = new SES({ apiVersion: '2010-12-01' })
+const ses = new SES({ apiVersion: '2010-12-01' });
 
 const validate = async (body) => {
   const schema = yup.object().shape({
@@ -14,94 +12,92 @@ const validate = async (body) => {
     title: yup.string().required(),
     description: yup.string().required(),
     duration: yup.number().oneOf([15, 20, 30, 45, 60]).required(),
-    format: yup.string().oneOf(["in-person", "online", "both"]).required(),
+    format: yup.string().oneOf(['in-person', 'online', 'both']).required(),
     bio: yup.string().required(),
     social: yup.string().required(),
     email: yup.string().email().required(),
-  })
+  });
 
-  return await schema.isValid(body)
-}
+  return await schema.isValid(body);
+};
 
 const sendMail = async (body) => {
-    const params = {
-      Source: process.env.EMAIL,
-      Destination: { 
-        ToAddresses: [
-          body.email
-        ]
-      },
-      Message: {
-        Body: {
-          Text: {
-            Data: 'kekekekek kekek sdf sdf sjfshjk shfjk fdsafsfsf fsafsdfs'
-          }
+  const params = {
+    Source: process.env.EMAIL,
+    Destination: {
+      ToAddresses: [body.email],
+    },
+    Message: {
+      Body: {
+        Text: {
+          Data: 'kekekekek kekek sdf sdf sjfshjk shfjk fdsafsfsf fsafsdfs',
         },
-        Subject: {
-          Data: 'CFP Gambiconf'
-        }
-      }
-    }
-    
-    try {
-      await ses.sendEmail(params)
-      return {
-        statusCode: 200,
-        body: "Email sent"
-      }
-    } catch (error) {
-      console.log(error)
-      return {
-        statusCode: 500,
-        body: "Error " + error
-      }
-    }
-}
+      },
+      Subject: {
+        Data: 'CFP Gambiconf',
+      },
+    },
+  };
+
+  try {
+    await ses.sendEmail(params);
+    return {
+      statusCode: 200,
+      body: 'Email sent',
+    };
+  } catch (error) {
+    console.log(error);
+    return {
+      statusCode: 500,
+      body: `Error ${error}`,
+    };
+  }
+};
 
 const cfp = async (event) => {
   try {
-    const googleSheetID = process.env.SHEET_ID
-    const sheet = new GoogleSpreadsheet(googleSheetID)
-    await sheet.useServiceAccountAuth(clientSecret)
-    await sheet.loadInfo()
+    const googleSheetID = process.env.SHEET_ID;
+    const sheet = new GoogleSpreadsheet(googleSheetID);
+    await sheet.useServiceAccountAuth(clientSecret);
+    await sheet.loadInfo();
 
-    const tab = sheet.sheetsByTitle['CFP']
+    const tab = sheet.sheetsByTitle.CFP;
 
-    await tab.loadHeaderRow()
+    await tab.loadHeaderRow();
 
-    const body = JSON.parse(event.body)
+    const body = JSON.parse(event.body);
 
-    const isValid = await validate(body)
+    const isValid = await validate(body);
 
     if (!isValid) {
       console.error({
         tag: '[INVALID BODY]',
         metadata: { body },
-      })
-  
+      });
+
       return {
         statusCode: 422,
         headers: {
           'Access-Control-Allow-Origin': '*',
           'Access-Control-Allow-Credentials': true,
-        },  
+        },
         body: JSON.stringify({
           message: 'Invalid request',
         }),
-      }
+      };
     }
 
-    await tab.addRow(body)
-    const result = await sendMail(body)
-    console.log(result)
-    
+    await tab.addRow(body);
+    const result = await sendMail(body);
+    console.log(result);
+
     return {
       headers: {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Credentials': true,
       },
       statusCode: 200,
-    }
+    };
   } catch (e) {
     console.error({
       tag: '[FATAL ERROR]',
@@ -110,7 +106,7 @@ const cfp = async (event) => {
         message: e?.message,
         stack: e?.stack,
       },
-    })
+    });
 
     return {
       statusCode: 500,
@@ -118,12 +114,12 @@ const cfp = async (event) => {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Credentials': true,
       },
-    }
+    };
   }
-}
+};
 
-module.exports.cfp = cfp
+module.exports.cfp = cfp;
 
-module.exports.validate = validate
+module.exports.validate = validate;
 
-module.exports.sendMail = sendMail
+module.exports.sendMail = sendMail;

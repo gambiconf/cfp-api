@@ -1,0 +1,7 @@
+{
+  "extends": "@serverless/eslint-config/node",
+  "rules": {
+    "strict": "off",
+    "no-console": "off"
+  }
+}
