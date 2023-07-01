@@ -1,17 +1,23 @@
 service: cfp-api
 frameworkVersion: '3'
+useDotenv: true
 
-plugins:
-  - serverless-bundle
 provider:
   name: aws
-  runtime: nodejs14.x
+  runtime: nodejs18.x
+  deploymentMethod: direct
+  stage: prod
+  environment:
+    SES_AWS_REGION: ${env:SES_AWS_REGION}
+    SES_AWS_ACCESS_KEY_ID: ${env:SES_AWS_ACCESS_KEY_ID}
+    SES_AWS_SECRET_ACCESS_KEY: ${env:SES_AWS_SECRET_ACCESS_KEY}
+    EMAIL: ${env:EMAIL}
+    SHEET_ID: ${env:SHEET_ID}
+  httpApi:
+    cors: true
 
 functions:
   cfp:
     handler: handler.cfp
     events:
-      - http:
-          path: /cfp
-          method: POST
-          cors: true
+      - httpApi: 'POST /cfp'

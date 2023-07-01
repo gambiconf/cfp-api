@@ -27,7 +27,12 @@ The current dependencies we have are:
 
 - AmazonSQSFullAccess;
 - AmazonSESFullAccess;
-- AWSLambda_FullAccess.
+- AWSLambda_FullAccess;
+- AmazonS3FullAccess;
+- AWSCloudFormationFullAccess;
+- IAMFullAccess;
+- AmazonAPIGatewayAdministrator;
+- CloudWatchFullAccess.
 
 3. Then an user attached to this group which you can generate "Access keys" from it;
 4. Put the credentials in the `.env` file;
@@ -51,4 +56,18 @@ The current dependencies we have are:
 
 ### Example
 
-Once you have AWS and GCP set up, you can run `npm run example`, that should send an e-mail and append a line to the spreadsheet ID defined :)
+Once you have AWS and GCP set up, you can run `npm run example`, that should send an e-mail and append a line to the spreadsheet ID defined.
+
+## Deploy
+
+For the first time, you'll need to create the whole AWS infrastructure by running:
+
+```
+npm run deploy:all
+```
+
+After that, futher updates on the lambda can be deployed by running:
+
+```
+npm run deploy:cfp
+```

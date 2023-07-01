@@ -10,7 +10,9 @@
     "example": "node example.js",
     "lint": "eslint  --ignore-path .gitignore .",
     "prettier-check": "prettier -c --ignore-path .gitignore \"**/*.{css,html,js,json,md,yaml,yml}\"",
-    "prettify": "prettier --write --ignore-path .gitignore \"**/*.{css,html,js,json,md,yaml,yml}\""
+    "prettify": "prettier --write --ignore-path .gitignore \"**/*.{css,html,js,json,md,yaml,yml}\"",
+    "deploy:all": "sls deploy",
+    "deploy:cfp": "sls deploy function --function cfp"
   },
   "dependencies": {
     "@aws-sdk/client-ses": "^3.359.0",
@@ -24,6 +26,6 @@
     "eslint-plugin-import": "^2.27.5",
     "prettier": "^2.8.8",
     "serverless": "^3.32.2",
-    "serverless-bundle": "^6.0.0"
+    "serverless-dotenv-plugin": "^6.0.0"
   }
 }

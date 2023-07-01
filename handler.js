@@ -4,7 +4,14 @@ const clientSecret = require('./client_secret.json');
 const yup = require('yup');
 const { SES } = require('@aws-sdk/client-ses');
 
-const ses = new SES({ apiVersion: '2010-12-01' });
+const ses = new SES({
+  region: process.env.SES_AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.SES_AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.SES_AWS_SECRET_ACCESS_KEY,
+  },
+  apiVersion: '2010-12-01',
+});
 
 const validate = async (body) => {
   const schema = yup.object().shape({
@@ -39,36 +46,62 @@ const sendMail = async (body) => {
     },
   };
 
-  try {
-    await ses.sendEmail(params);
-    return {
-      statusCode: 200,
-      body: 'Email sent',
-    };
-  } catch (error) {
-    console.log(error);
-    return {
-      statusCode: 500,
-      body: `Error ${error}`,
-    };
-  }
+  await ses.sendEmail(params);
 };
+
+const loadGoogleSheetCFP = async () => {
+  const googleSheetID = process.env.SHEET_ID;
+
+  const sheet = new GoogleSpreadsheet(googleSheetID);
+
+  try {
+    await sheet.useServiceAccountAuth(clientSecret);
+    await sheet.loadInfo();
+  } catch (error) {
+    console.error({
+      tag: '[FATAL ERROR] Failed to load the spreadsheet',
+      metadata: {
+        googleSheetID,
+        message: error?.message,
+        stack: error?.stack,
+      },
+    })
+
+    throw error;
+  }
+
+  const sheetTab = sheet.sheetsByTitle.CFP;
+
+  try {
+    await sheetTab.loadHeaderRow();
+  } catch (error) {
+    console.error({
+      tag: '[FATAL ERROR] Failed to load the CFP sheet header row',
+      metadata: {
+        sheets: Object.keys(sheet.sheetsByTitle),
+        message: error?.message,
+        stack: error?.stack,
+      },
+    })
+
+    throw error;
+  }
+
+  return sheetTab;
+}
 
 const cfp = async (event) => {
   try {
-    const googleSheetID = process.env.SHEET_ID;
-    const sheet = new GoogleSpreadsheet(googleSheetID);
-    await sheet.useServiceAccountAuth(clientSecret);
-    await sheet.loadInfo();
-
-    const tab = sheet.sheetsByTitle.CFP;
-
-    await tab.loadHeaderRow();
+    console.log({
+      tag: '[LOG]',
+      metadata: {
+        message: 'Received a new request',
+        event: JSON.stringify(event),
+      }
+    })
 
     const body = JSON.parse(event.body);
-
     const isValid = await validate(body);
-
     if (!isValid) {
       console.error({
         tag: '[INVALID BODY]',
@@ -87,9 +120,34 @@ const cfp = async (event) => {
       };
     }
 
-    await tab.addRow(body);
-    const result = await sendMail(body);
-    console.log(result);
+    const sheetTab = await loadGoogleSheetCFP()
+    try {
+      await sheetTab.addRow(body);
+    } catch(error) {
+      console.error({
+        tag: '[FATAL ERROR] Could not add the new row on the sheet',
+        metadata: {
+          event: JSON.stringify(event),
+          message: error?.message,
+          stack: error?.stack,
+        },
+      });
+      throw error;
+    }
+
+    try {
+      await sendMail(body);
+    } catch (error) {
+      console.error({
+        tag: '[FATAL ERROR] Could not send the e-mail',
+        metadata: {
+          event: JSON.stringify(event),
+          message: error?.message,
+          stack: error?.stack,
+        },
+      });
+      throw error;
+    }
 
     return {
       headers: {
@@ -98,13 +156,14 @@ const cfp = async (event) => {
       },
       statusCode: 200,
     };
-  } catch (e) {
+  } catch (error) {
     console.error({
       tag: '[FATAL ERROR]',
       metadata: {
         event: JSON.stringify(event),
-        message: e?.message,
-        stack: e?.stack,
+        email: process.env.EMAIL,
+        message: error?.message,
+        stack: error?.stack,
       },
     });
 
