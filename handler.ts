@@ -9,7 +9,7 @@ require('dotenv').config();
 
 type Schema = {
   speakerName: string;
-  twitterHandler: string;
+  twitterHandler?: string;
   type: 'talk' | 'sprint';
   language: 'only_portuguese' | 'only_english' | 'portuguese_or_english';
   title: string;
@@ -29,10 +29,10 @@ const ses = new SES({
   apiVersion: '2010-12-01',
 });
 
-const validate = async (body: object) => {
+const validate = (body: object) => {
   const schema: yup.ObjectSchema<Schema> = yup.object().shape({
     speakerName: yup.string().required(),
-    twitterHandler: yup.string().required(),
+    twitterHandler: yup.string(),
     type: yup.string().oneOf(['talk', 'sprint']).required(),
     language: yup
       .string()
@@ -46,7 +46,7 @@ const validate = async (body: object) => {
     speakerEmail: yup.string().required(),
   });
 
-  return await schema.isValid(body);
+  schema.validateSync(body);
 };
 
 const sendMail = async (schema: Schema) => {
@@ -164,8 +164,9 @@ const cfp = async (event: APIGatewayProxyEvent) => {
     });
 
     const body = JSON.parse(event.body!);
-    const isValid = await validate(body);
-    if (!isValid) {
+    try {
+      validate(body);
+    } catch (error) {
       console.error({
         tag: '[INVALID BODY]',
         metadata: { body },
@@ -178,7 +179,8 @@ const cfp = async (event: APIGatewayProxyEvent) => {
           'Access-Control-Allow-Credentials': true,
         },
         body: JSON.stringify({
-          message: 'Invalid request',
+          message: 'Invalid form',
+          errors: error.errors
         }),
       };
     }

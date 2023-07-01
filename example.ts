@@ -18,6 +18,8 @@ async function main() {
     speakerEmail: email,
   } as const;
 
+  validate(body);
+
   const googleSheetID = process.env.SHEET_ID;
   const sheet = new GoogleSpreadsheet(googleSheetID);
   await sheet.useServiceAccountAuth(clientSecret);
@@ -26,8 +28,6 @@ async function main() {
   const tab = sheet.sheetsByTitle.CFP;
 
   await tab.loadHeaderRow();
-
-  await validate(body);
 
   await tab.addRow(body);
   const result = await sendMail(body);
