@@ -29,11 +29,14 @@ const ses = new SES({
 });
 
 const validate = async (body: object) => {
-  const schema: yup.ObjectSchema<Schema>  = yup.object().shape({
+  const schema: yup.ObjectSchema<Schema> = yup.object().shape({
     speakerName: yup.string().required(),
     twitterHandler: yup.string().required(),
     type: yup.string().oneOf(['talk', 'sprint']).required(),
-    language: yup.string().oneOf(['only_portuguese', 'only_english', 'portuguese_or_english']).required(),
+    language: yup
+      .string()
+      .oneOf(['only_portuguese', 'only_english', 'portuguese_or_english'])
+      .required(),
     title: yup.string().required(),
     description: yup.string().required(),
     duration: yup.number<0 | 15 | 20 | 30 | 45>().oneOf([0, 15, 20, 30, 45]),
@@ -46,6 +49,45 @@ const validate = async (body: object) => {
 };
 
 const sendMail = async (schema: Schema) => {
+  const messageBody =
+    schema.language === 'only_portuguese'
+      ? `Hey 👋<br />
+<br />
+Recebemos a submissão da sua apresentação para a GambiConf: <strong>"${schema.title}"</strong><br />
+Agradecemos seu interesse em contribuir com nosso evento. Obrigado!<br />
+<br />
+Após o término do CFP entraremos em contato.<br />
+<br />
+As previsão das próximas etapas são:<br />
+- Encerramento do CFP: 27 de Agosto<br />
+- Ensaio (opcional): 28 de Agosto até 18 de Novembro<br />
+- Evento: 25 e 26 de Novembro<br />
+<br />
+Siga-nos no Twitter para ser o primeiro a saber das novidades: <a href="https://twitter.com/gambiconf">@gambiconf</a><br />
+<br />
+Obrigado,<br />
+Organização da GambiConf
+`
+      : `Hey 👋<br />
+<br />
+We acknowledge the receipt of your submission to GambiConf, titled <strong>"${schema.title}"</strong>.<br />
+We appreciate your interest in contributing to our event. Thanks!<br />
+<br />
+Once the CFP concludes, we will be reaching out to you.<br />
+<br />
+Here's an overview of the upcoming stages:<br />
+<br />
+- CFP deadline: August 27th<br />
+- Optional dry-run: August 28th to November 18th<br />
+- Event: November 25th and 26th<br />
+<br />
+For the latest updates and news, we encourage you to follow us on Twitter at <a href="https://twitter.com/gambiconf">@gambiconf</a>.<br />
+We will share updates there first, ensuring you stay informed.<br />
+<br />
+Best regards,<br />
+GambiConf Organizing Team
+`;
+
   const params: SendEmailCommandInput = {
     Source: process.env.EMAIL,
     Destination: {
@@ -53,12 +95,12 @@ const sendMail = async (schema: Schema) => {
     },
     Message: {
       Body: {
-        Text: {
-          Data: 'kekekekek kekek sdf sdf sjfshjk shfjk fdsafsfsf fsafsdfs',
+        Html: {
+          Data: messageBody,
         },
       },
       Subject: {
-        Data: 'CFP Gambiconf',
+        Data: 'GambiConf - CFP',
       },
     },
   };

@@ -3,6 +3,8 @@ import { validate, sendMail } from './handler';
 import clientSecret from './client_secret.json';
 
 async function main() {
+  const email = process.env.EMAIL as string;
+
   const body = {
     speakerName: 'Bruno Macabeus',
     twitterHandler: '@bmacabeus',
@@ -13,7 +15,7 @@ async function main() {
     duration: 20,
     speakerBio: 'My Bio',
     speakerSocialMedias: 'Twitter: @bmacabeus',
-    speakerEmail: process.env.EMAIL as string,
+    speakerEmail: email,
   } as const;
 
   const googleSheetID = process.env.SHEET_ID;
@@ -30,6 +32,8 @@ async function main() {
   await tab.addRow(body);
   const result = await sendMail(body);
   console.log(result);
+
+  console.log(`E-mail sent to: ${email}`);
 }
 
 main().catch(console.error);
