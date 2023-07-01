@@ -1,19 +1,23 @@
+import type { APIGatewayProxyEvent } from 'aws-lambda';
+import { GoogleSpreadsheet } from 'google-spreadsheet';
+import * as yup from 'yup';
+import { SES, SendEmailCommandInput } from '@aws-sdk/client-ses';
+import clientSecret from './client_secret.json';
+
 require('dotenv').config();
-const { GoogleSpreadsheet } = require('google-spreadsheet');
-const clientSecret = require('./client_secret.json');
-const yup = require('yup');
-const { SES } = require('@aws-sdk/client-ses');
+
+type Schema = Record<string, any>;
 
 const ses = new SES({
   region: process.env.SES_AWS_REGION,
   credentials: {
-    accessKeyId: process.env.SES_AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.SES_AWS_SECRET_ACCESS_KEY,
+    accessKeyId: process.env.SES_AWS_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.SES_AWS_SECRET_ACCESS_KEY!,
   },
   apiVersion: '2010-12-01',
 });
 
-const validate = async (body) => {
+const validate = async (body: object) => {
   const schema = yup.object().shape({
     name: yup.string().required(),
     title: yup.string().required(),
@@ -28,11 +32,11 @@ const validate = async (body) => {
   return await schema.isValid(body);
 };
 
-const sendMail = async (body) => {
-  const params = {
+const sendMail = async (schema: Schema) => {
+  const params: SendEmailCommandInput = {
     Source: process.env.EMAIL,
     Destination: {
-      ToAddresses: [body.email],
+      ToAddresses: [schema.email],
     },
     Message: {
       Body: {
@@ -46,7 +50,8 @@ const sendMail = async (body) => {
     },
   };
 
-  await ses.sendEmail(params);
+  const result = await ses.sendEmail(params);
+  return result;
 };
 
 const loadGoogleSheetCFP = async () => {
@@ -65,7 +70,7 @@ const loadGoogleSheetCFP = async () => {
         message: error?.message,
         stack: error?.stack,
       },
-    })
+    });
 
     throw error;
   }
@@ -82,25 +87,25 @@ const loadGoogleSheetCFP = async () => {
         message: error?.message,
         stack: error?.stack,
       },
-    })
+    });
 
     throw error;
   }
 
   return sheetTab;
-}
+};
 
-const cfp = async (event) => {
+const cfp = async (event: APIGatewayProxyEvent) => {
   try {
     console.log({
       tag: '[LOG]',
       metadata: {
         message: 'Received a new request',
         event: JSON.stringify(event),
-      }
-    })
+      },
+    });
 
-    const body = JSON.parse(event.body);
+    const body = JSON.parse(event.body!);
     const isValid = await validate(body);
     if (!isValid) {
       console.error({
@@ -120,10 +125,10 @@ const cfp = async (event) => {
       };
     }
 
-    const sheetTab = await loadGoogleSheetCFP()
+    const sheetTab = await loadGoogleSheetCFP();
     try {
       await sheetTab.addRow(body);
-    } catch(error) {
+    } catch (error) {
       console.error({
         tag: '[FATAL ERROR] Could not add the new row on the sheet',
         metadata: {
@@ -177,8 +182,4 @@ const cfp = async (event) => {
   }
 };
 
-module.exports.cfp = cfp;
-
-module.exports.validate = validate;
-
-module.exports.sendMail = sendMail;
+export { cfp, validate, sendMail };

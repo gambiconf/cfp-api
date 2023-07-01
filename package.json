@@ -7,7 +7,7 @@
   "license": "ISC",
   "scripts": {
     "test": "jest",
-    "example": "node example.js",
+    "example": "ts-node example.ts",
     "lint": "eslint  --ignore-path .gitignore .",
     "prettier-check": "prettier -c --ignore-path .gitignore \"**/*.{css,html,js,json,md,yaml,yml}\"",
     "prettify": "prettier --write --ignore-path .gitignore \"**/*.{css,html,js,json,md,yaml,yml}\"",
@@ -22,10 +22,15 @@
   },
   "devDependencies": {
     "@serverless/eslint-config": "^5.1.0",
+    "@types/aws-lambda": "^8.10.119",
+    "@types/google-spreadsheet": "^3.3.2",
     "eslint": "^7.32.0",
     "eslint-plugin-import": "^2.27.5",
     "prettier": "^2.8.8",
     "serverless": "^3.32.2",
-    "serverless-dotenv-plugin": "^6.0.0"
+    "serverless-dotenv-plugin": "^6.0.0",
+    "serverless-plugin-typescript": "^2.1.5",
+    "typescript": "^5.1.6",
+    "ts-node": "^10.9.1"
   }
 }

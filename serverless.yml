@@ -2,6 +2,16 @@ service: cfp-api
 frameworkVersion: '3'
 useDotenv: true
 
+plugins:
+  - serverless-plugin-typescript
+
+custom:
+  serverlessPluginTypescript:
+    tsConfigFileLocation: './tsconfig.json'
+
+package:
+  individually: true
+
 provider:
   name: aws
   runtime: nodejs18.x

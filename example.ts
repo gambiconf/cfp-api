@@ -1,9 +1,6 @@
-'use strict';
-
-const { GoogleSpreadsheet } = require('google-spreadsheet');
-
-const { validate, sendMail } = require('./handler.js');
-const clientSecret = require('./client_secret.json');
+import { GoogleSpreadsheet } from 'google-spreadsheet';
+import { validate, sendMail } from './handler';
+import clientSecret from './client_secret.json';
 
 async function main() {
   const body = {
@@ -14,7 +11,7 @@ async function main() {
     format: 'in-person',
     bio: "bla bla tech person, lot's of years bla bla",
     social: '@evaporei',
-    email: process.env.EMAIL,
+    email: process.env.EMAIL as string,
   };
 
   const googleSheetID = process.env.SHEET_ID;
