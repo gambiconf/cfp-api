@@ -4,15 +4,17 @@ import clientSecret from './client_secret.json';
 
 async function main() {
   const body = {
-    name: 'eva pace',
-    title: 'bad talk hehe',
-    description: 'uwu bad talk descrip',
-    duration: 15,
-    format: 'in-person',
-    bio: "bla bla tech person, lot's of years bla bla",
-    social: '@evaporei',
-    email: process.env.EMAIL as string,
-  };
+    speakerName: 'Bruno Macabeus',
+    twitterHandler: '@bmacabeus',
+    type: 'talk',
+    language: 'portuguese_or_english',
+    title: 'My Talk',
+    description: 'The Talk Description',
+    duration: 20,
+    speakerBio: 'My Bio',
+    speakerSocialMedias: 'Twitter: @bmacabeus',
+    speakerEmail: process.env.EMAIL as string,
+  } as const;
 
   const googleSheetID = process.env.SHEET_ID;
   const sheet = new GoogleSpreadsheet(googleSheetID);

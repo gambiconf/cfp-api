@@ -6,7 +6,18 @@ import clientSecret from './client_secret.json';
 
 require('dotenv').config();
 
-type Schema = Record<string, any>;
+type Schema = {
+  speakerName: string;
+  twitterHandler: string;
+  type: 'talk' | 'sprint';
+  language: 'only_portuguese' | 'only_english' | 'portuguese_or_english';
+  title: string;
+  description: string;
+  duration?: 0 | 15 | 20 | 30 | 45;
+  speakerBio: string;
+  speakerSocialMedias: string;
+  speakerEmail: string;
+};
 
 const ses = new SES({
   region: process.env.SES_AWS_REGION,
@@ -18,15 +29,17 @@ const ses = new SES({
 });
 
 const validate = async (body: object) => {
-  const schema = yup.object().shape({
-    name: yup.string().required(),
+  const schema: yup.ObjectSchema<Schema>  = yup.object().shape({
+    speakerName: yup.string().required(),
+    twitterHandler: yup.string().required(),
+    type: yup.string().oneOf(['talk', 'sprint']).required(),
+    language: yup.string().oneOf(['only_portuguese', 'only_english', 'portuguese_or_english']).required(),
     title: yup.string().required(),
     description: yup.string().required(),
-    duration: yup.number().oneOf([15, 20, 30, 45, 60]).required(),
-    format: yup.string().oneOf(['in-person', 'online', 'both']).required(),
-    bio: yup.string().required(),
-    social: yup.string().required(),
-    email: yup.string().email().required(),
+    duration: yup.number<0 | 15 | 20 | 30 | 45>().oneOf([0, 15, 20, 30, 45]),
+    speakerBio: yup.string().required(),
+    speakerSocialMedias: yup.string().required(),
+    speakerEmail: yup.string().required(),
   });
 
   return await schema.isValid(body);
@@ -36,7 +49,7 @@ const sendMail = async (schema: Schema) => {
   const params: SendEmailCommandInput = {
     Source: process.env.EMAIL,
     Destination: {
-      ToAddresses: [schema.email],
+      ToAddresses: [schema.speakerEmail],
     },
     Message: {
       Body: {
