@@ -2,6 +2,7 @@ import type { APIGatewayProxyEvent } from 'aws-lambda';
 import { GoogleSpreadsheet } from 'google-spreadsheet';
 import * as yup from 'yup';
 import { SES, SendEmailCommandInput } from '@aws-sdk/client-ses';
+import sanitizeHtml from 'sanitize-html';
 import clientSecret from './client_secret.json';
 
 require('dotenv').config();
@@ -49,11 +50,13 @@ const validate = async (body: object) => {
 };
 
 const sendMail = async (schema: Schema) => {
+  const talkTitle = sanitizeHtml(schema.title)
+
   const messageBody =
     schema.language === 'only_portuguese'
       ? `Hey 👋<br />
 <br />
-Recebemos a submissão da sua apresentação para a GambiConf: <strong>"${schema.title}"</strong><br />
+Recebemos a submissão da sua apresentação para a GambiConf: <strong>"${talkTitle}"</strong><br />
 Agradecemos seu interesse em contribuir com nosso evento. Obrigado!<br />
 <br />
 Após o término do CFP entraremos em contato.<br />
@@ -70,7 +73,7 @@ Organização da GambiConf
 `
       : `Hey 👋<br />
 <br />
-We acknowledge the receipt of your submission to GambiConf, titled <strong>"${schema.title}"</strong>.<br />
+We acknowledge the receipt of your submission to GambiConf, titled <strong>"${talkTitle}"</strong>.<br />
 We appreciate your interest in contributing to our event. Thanks!<br />
 <br />
 Once the CFP concludes, we will be reaching out to you.<br />
