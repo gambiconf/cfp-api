@@ -69,5 +69,5 @@ npm run deploy:all
 After that, futher updates on the lambda can be deployed by running:
 
 ```
-npm run deploy:cfp
+npm run deploy:funcions
 ```

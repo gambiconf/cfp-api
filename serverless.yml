@@ -27,7 +27,19 @@ provider:
     cors: true
 
 functions:
-  cfp:
-    handler: handler.cfp
+  getSubmissions:
+    handler: handler.getSubmissions
     events:
-      - httpApi: 'POST /cfp'
+      - httpApi:
+          method: GET
+          path: /submissions/{id}
+  postSubmissions:
+    handler: handler.postSubmissions
+    events:
+      - httpApi: 'POST /submissions'
+  putSubmissions:
+    handler: handler.putSubmissions
+    events:
+      - httpApi:
+          method: PUT
+          path: /submissions/{id}

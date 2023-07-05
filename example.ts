@@ -1,5 +1,6 @@
 import { GoogleSpreadsheet } from 'google-spreadsheet';
-import { validate, sendMail } from './handler';
+import { makeSubmissionFromBody } from './handler';
+import { sendMail } from './sendEmail';
 import clientSecret from './client_secret.json';
 
 async function main() {
@@ -18,7 +19,7 @@ async function main() {
     speakerEmail: email,
   } as const;
 
-  validate(body);
+  const submission = makeSubmissionFromBody(body);
 
   const googleSheetID = process.env.SHEET_ID;
   const sheet = new GoogleSpreadsheet(googleSheetID);
@@ -29,8 +30,8 @@ async function main() {
 
   await tab.loadHeaderRow();
 
-  await tab.addRow(body);
-  const result = await sendMail(body);
+  await tab.addRow(submission);
+  const result = await sendMail(submission);
   console.log(result);
 
   console.log(`E-mail sent to: ${email}`);

@@ -1,36 +1,22 @@
+import { v4 as uuidv4 } from 'uuid';
 import type { APIGatewayProxyEvent } from 'aws-lambda';
-import { GoogleSpreadsheet } from 'google-spreadsheet';
+import { GoogleSpreadsheet, GoogleSpreadsheetRow, GoogleSpreadsheetWorksheet } from 'google-spreadsheet';
 import * as yup from 'yup';
-import { SES, SendEmailCommandInput } from '@aws-sdk/client-ses';
-import sanitizeHtml from 'sanitize-html';
 import clientSecret from './client_secret.json';
+import type { BodySchema, Submission } from './types';
+import { sendMail } from './sendEmail';
 
 require('dotenv').config();
 
-type Schema = {
-  speakerName: string;
-  twitterHandler?: string;
-  type: 'talk' | 'sprint';
-  language: 'only_portuguese' | 'only_english' | 'portuguese_or_english';
-  title: string;
-  description: string;
-  duration?: 0 | 15 | 20 | 30 | 45;
-  speakerBio: string;
-  speakerSocialMedias: string;
-  speakerEmail: string;
-};
+class NotFoundError extends Error {
+  constructor() {
+    super('Not Found');
+    this.name = 'Not Found';
+  }
+}
 
-const ses = new SES({
-  region: process.env.SES_AWS_REGION,
-  credentials: {
-    accessKeyId: process.env.SES_AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.SES_AWS_SECRET_ACCESS_KEY!,
-  },
-  apiVersion: '2010-12-01',
-});
-
-const validate = (body: object) => {
-  const schema: yup.ObjectSchema<Schema> = yup.object().shape({
+export const makeSubmissionFromBody = (rawBody: object, id?: string): Submission => {
+  const schema: yup.ObjectSchema<BodySchema> = yup.object().shape({
     speakerName: yup.string().required(),
     twitterHandler: yup.string(),
     type: yup.string().oneOf(['talk', 'sprint']).required(),
@@ -46,70 +32,12 @@ const validate = (body: object) => {
     speakerEmail: yup.string().required(),
   });
 
-  schema.validateSync(body);
-};
+  const bodyValidated = schema.validateSync(rawBody);
 
-const sendMail = async (schema: Schema) => {
-  const talkTitle = sanitizeHtml(schema.title)
-
-  const messageBody =
-    schema.language === 'only_portuguese'
-      ? `Hey 👋<br />
-<br />
-Recebemos a submissão da sua apresentação para a GambiConf: <strong>"${talkTitle}"</strong><br />
-Agradecemos seu interesse em contribuir com nosso evento. Obrigado!<br />
-<br />
-Após o término do CFP entraremos em contato.<br />
-<br />
-As previsão das próximas etapas são:<br />
-- Encerramento do CFP: 27 de Agosto<br />
-- Ensaio (opcional): 28 de Agosto até 18 de Novembro<br />
-- Evento: 25 e 26 de Novembro<br />
-<br />
-Siga-nos no Twitter para ser o primeiro a saber das novidades: <a href="https://twitter.com/gambiconf">@gambiconf</a><br />
-<br />
-Obrigado,<br />
-Organização da GambiConf
-`
-      : `Hey 👋<br />
-<br />
-We acknowledge the receipt of your submission to GambiConf, titled <strong>"${talkTitle}"</strong>.<br />
-We appreciate your interest in contributing to our event. Thanks!<br />
-<br />
-Once the CFP concludes, we will be reaching out to you.<br />
-<br />
-Here's an overview of the upcoming stages:<br />
-<br />
-- CFP deadline: August 27th<br />
-- Optional dry-run: August 28th to November 18th<br />
-- Event: November 25th and 26th<br />
-<br />
-For the latest updates and news, we encourage you to follow us on Twitter at <a href="https://twitter.com/gambiconf">@gambiconf</a>.<br />
-We will share updates there first, ensuring you stay informed.<br />
-<br />
-Best regards,<br />
-GambiConf Organizing Team
-`;
-
-  const params: SendEmailCommandInput = {
-    Source: process.env.EMAIL,
-    Destination: {
-      ToAddresses: [schema.speakerEmail],
-    },
-    Message: {
-      Body: {
-        Html: {
-          Data: messageBody,
-        },
-      },
-      Subject: {
-        Data: 'GambiConf - CFP',
-      },
-    },
+  return {
+    ...bodyValidated,
+    id: id ?? uuidv4(),
   };
-
-  const result = await ses.sendEmail(params);
-  return result;
 };
 
 const loadGoogleSheetCFP = async () => {
@@ -153,23 +81,116 @@ const loadGoogleSheetCFP = async () => {
   return sheetTab;
 };
 
-const cfp = async (event: APIGatewayProxyEvent) => {
+const getSubmissionRow = async (id: string, sheetTab: GoogleSpreadsheetWorksheet) => {
+  let allSubmissionsRow: GoogleSpreadsheetRow[];
+  try {
+    allSubmissionsRow = await sheetTab.getRows();
+  } catch (error) {
+    console.error({
+      tag: '[FATAL ERROR] Could not get the submissions',
+      metadata: {
+        message: error?.message,
+        stack: error?.stack,
+      },
+    });
+    throw error;
+  }
+
+  const givenSubmissionRow = allSubmissionsRow.find((submission) => submission.id === id);
+  if (!givenSubmissionRow) {
+    console.error({
+      tag: '[NOT FOUND] Could not find the submission with the given id',
+      metadata: {
+        id,
+      },
+    });
+
+    throw new NotFoundError()
+  }
+
+  return givenSubmissionRow;
+}
+
+export const getSubmissions = async (event: APIGatewayProxyEvent) => {
   try {
     console.log({
       tag: '[LOG]',
       metadata: {
-        message: 'Received a new request',
+        message: 'Received a new request for getSubmissions',
+        event: JSON.stringify(event),
+      },
+    });
+
+    const id = event.pathParameters!.id!
+
+    const sheetTab = await loadGoogleSheetCFP();
+    const givenSubmissionRow = await getSubmissionRow(id, sheetTab);
+
+    const givenSubmission: Submission = {
+      id: givenSubmissionRow.id,
+      speakerName: givenSubmissionRow.speakerName,
+      twitterHandler: givenSubmissionRow.twitterHandler,
+      type: givenSubmissionRow.type,
+      language: givenSubmissionRow.language,
+      title: givenSubmissionRow.title,
+      description: givenSubmissionRow.description,
+      duration: givenSubmissionRow.duration,
+      speakerBio: givenSubmissionRow.speakerBio,
+      speakerSocialMedias: givenSubmissionRow.speakerSocialMedias,
+      speakerEmail: givenSubmissionRow.speakerEmail,
+    };
+
+    return {
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': true,
+        'Content-Type': 'application/json; charset=utf-8',
+      },
+      statusCode: 200,
+      body: JSON.stringify(givenSubmission),
+    };
+  } catch (error) {
+    console.error({
+      tag: '[FATAL ERROR]',
+      metadata: {
+        event: JSON.stringify(event),
+        message: error?.message,
+        stack: error?.stack,
+      },
+    });
+
+    const statusCode = (typeof error === 'object' && error !== null && error instanceof NotFoundError)
+      ? 404
+      : 500;
+
+    return {
+      statusCode,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': true,
+      },
+    };
+  }
+};
+
+export const postSubmissions = async (event: APIGatewayProxyEvent) => {
+  try {
+    console.log({
+      tag: '[LOG]',
+      metadata: {
+        message: 'Received a new request for postSubmissions',
         event: JSON.stringify(event),
       },
     });
 
     const body = JSON.parse(event.body!);
+    let submission: Submission;
     try {
-      validate(body);
+      submission = makeSubmissionFromBody(body);
     } catch (error) {
       console.error({
         tag: '[INVALID BODY]',
-        metadata: { body },
+        metadata: { errors: error.errors, body },
       });
 
       return {
@@ -177,17 +198,18 @@ const cfp = async (event: APIGatewayProxyEvent) => {
         headers: {
           'Access-Control-Allow-Origin': '*',
           'Access-Control-Allow-Credentials': true,
+          'Content-Type': 'application/json; charset=utf-8',
         },
         body: JSON.stringify({
           message: 'Invalid form',
-          errors: error.errors
+          errors: error.errors,
         }),
       };
     }
 
     const sheetTab = await loadGoogleSheetCFP();
     try {
-      await sheetTab.addRow(body);
+      await sheetTab.addRow(submission);
     } catch (error) {
       console.error({
         tag: '[FATAL ERROR] Could not add the new row on the sheet',
@@ -201,7 +223,119 @@ const cfp = async (event: APIGatewayProxyEvent) => {
     }
 
     try {
-      await sendMail(body);
+      await sendMail(submission);
+    } catch (error) {
+      console.error({
+        tag: '[FATAL ERROR] Could not send the e-mail',
+        metadata: {
+          event: JSON.stringify(event),
+          message: error?.message,
+          stack: error?.stack,
+        },
+      });
+      throw error;
+    }
+
+    return {
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': true,
+      },
+      statusCode: 200,
+      body: JSON.stringify({
+        id: submission.id,
+      })
+    };
+  } catch (error) {
+    console.error({
+      tag: '[FATAL ERROR]',
+      metadata: {
+        event: JSON.stringify(event),
+        message: error?.message,
+        stack: error?.stack,
+      },
+    });
+
+    return {
+      statusCode: 500,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': true,
+      },
+    };
+  }
+};
+
+export const putSubmissions = async (event: APIGatewayProxyEvent) => {
+  try {
+    console.log({
+      tag: '[LOG]',
+      metadata: {
+        message: 'Received a new request for putSubmissions',
+        event: JSON.stringify(event),
+      },
+    });
+
+    const id = event.pathParameters!.id!
+
+    const body = JSON.parse(event.body!);
+    let submission: Submission;
+    try {
+      submission = makeSubmissionFromBody(body, id);
+    } catch (error) {
+      console.error({
+        tag: '[INVALID BODY]',
+        metadata: { errors: error.errors, body },
+      });
+
+      return {
+        statusCode: 422,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Credentials': true,
+          'Content-Type': 'application/json; charset=utf-8',
+        },
+        body: JSON.stringify({
+          message: 'Invalid form',
+          errors: error.errors,
+        }),
+      };
+    }
+
+    const sheetTab = await loadGoogleSheetCFP();
+    const givenSubmissionRow = await getSubmissionRow(id, sheetTab);
+
+    try {
+      await givenSubmissionRow.delete()
+    } catch (error) {
+      console.error({
+        tag: '[FATAL ERROR] Could not remove the old row',
+        metadata: {
+          event: JSON.stringify(event),
+          message: error?.message,
+          stack: error?.stack,
+        },
+      });
+
+      throw error;
+    }
+
+    try {
+      await sheetTab.addRow(submission);
+    } catch (error) {
+      console.error({
+        tag: '[FATAL ERROR] Could not add the new row on the sheet',
+        metadata: {
+          event: JSON.stringify(event),
+          message: error?.message,
+          stack: error?.stack,
+        },
+      });
+      throw error;
+    }
+
+    try {
+      await sendMail(submission);
     } catch (error) {
       console.error({
         tag: '[FATAL ERROR] Could not send the e-mail',
@@ -226,14 +360,17 @@ const cfp = async (event: APIGatewayProxyEvent) => {
       tag: '[FATAL ERROR]',
       metadata: {
         event: JSON.stringify(event),
-        email: process.env.EMAIL,
         message: error?.message,
         stack: error?.stack,
       },
     });
 
+    const statusCode = (typeof error === 'object' && error !== null && error instanceof NotFoundError)
+      ? 404
+      : 500;
+
     return {
-      statusCode: 500,
+      statusCode,
       headers: {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Credentials': true,
@@ -241,5 +378,3 @@ const cfp = async (event: APIGatewayProxyEvent) => {
     };
   }
 };
-
-export { cfp, validate, sendMail };
