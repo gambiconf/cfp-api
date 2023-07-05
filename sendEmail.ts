@@ -13,13 +13,11 @@ const ses = new SES({
 });
 
 const getMessageBody = (submission: Submission) => {
-  const talkTitle = sanitizeHtml(submission.title);
-
   if (submission.language === 'only_portuguese') {
     return dedent`
       Hey 👋<br />
       <br />
-      Recebemos a submissão da sua apresentação para a GambiConf: <strong>"${talkTitle}"</strong><br />
+      Recebemos a submissão da sua apresentação para a GambiConf: <strong>"${sanitizeHtml(submission.title)}"</strong><br />
       Agradecemos seu interesse em contribuir com nosso evento. Obrigado!<br />
       <br />
       Caso precise editar a sua submissão, use esse link: <a href="https://gambiconf.dev/cfp?id=${submission.id}">https://gambiconf.dev/cfp?id=${submission.id}</a><br />
@@ -32,16 +30,34 @@ const getMessageBody = (submission: Submission) => {
       - Evento: 25 e 26 de Novembro<br />
       <br />
       Siga-nos no Twitter para ser o primeiro a saber das novidades: <a href="https://twitter.com/gambiconf">@gambiconf</a><br />
+      <hr />
+      <strong>Sua submissão:</strong><br />
+      - Nome: ${sanitizeHtml(submission.speakerName)}<br />
+      ${submission.twitterHandler ? `- Twitter handler: ${sanitizeHtml(submission.twitterHandler)}<br />` : ''}
+      - Idioma: Apenas em português<br />
+      - O que vai conduzir: ${sanitizeHtml(submission.type)}<br />
+      - Título: ${sanitizeHtml(submission.title)}<br />
+      - Descrição: ${sanitizeHtml(submission.description)}<br />
+      ${submission.type === 'talk' ? `- Duração: ${submission.duration} minutos<br />` : ''}
+      - Bio: ${sanitizeHtml(submission.speakerBio)}<br />
+      - Medias sociais: ${sanitizeHtml(submission.speakerSocialMedias)}<br />
+      <hr />
       <br />
       Obrigado,<br />
       Organização da GambiConf
     `;
   }
 
+  const language: Record<Submission['language'], string> = {
+    portuguese_or_english: 'Portuguese or English',
+    only_portuguese: 'Only in Portuguese',
+    only_english: 'Only in English',
+  }
+
   return dedent`
     Hey 👋<br />
     <br />
-    We acknowledge the receipt of your submission to GambiConf, titled <strong>"${talkTitle}"</strong>.<br />
+    We acknowledge the receipt of your submission to GambiConf, titled <strong>"${sanitizeHtml(submission.title)}"</strong>.<br />
     We appreciate your interest in contributing to our event. Thanks!<br />
     <br />
     If you need to update your submission, use this link: <a href="https://gambiconf.dev/cfp?id=${submission.id}">https://gambiconf.dev/cfp?id=${submission.id}</a>
@@ -56,6 +72,18 @@ const getMessageBody = (submission: Submission) => {
     <br />
     For the latest updates and news, we encourage you to follow us on Twitter at <a href="https://twitter.com/gambiconf">@gambiconf</a>.<br />
     We will share updates there first, ensuring you stay informed.<br />
+    <hr />
+    <strong>Your submission:</strong><br />
+    - Name: ${sanitizeHtml(submission.speakerName)}<br />
+    ${submission.twitterHandler ? `- Twitter handler: ${sanitizeHtml(submission.twitterHandler)}<br />` : ''}
+    - Language: ${language[submission.language]}<br />
+    - Whar you are going to lead: ${sanitizeHtml(submission.type)}<br />
+    - Title: ${sanitizeHtml(submission.title)}<br />
+    - Description: ${sanitizeHtml(submission.description)}<br />
+    ${sanitizeHtml(submission.type) === 'talk' ? `- Duration: ${submission.duration} minutes<br />` : ''}
+    - Bio: ${sanitizeHtml(submission.speakerBio)}<br />
+    - Social medias: ${sanitizeHtml(submission.speakerSocialMedias)}<br />
+    <hr />
     <br />
     Best regards,<br />
     GambiConf Organizing Team
