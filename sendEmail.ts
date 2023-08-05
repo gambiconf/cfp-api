@@ -41,6 +41,7 @@ const getMessageBody = (submission: Submission) => {
       ${submission.type === 'talk' ? `- Duração: ${submission.duration} minutos<br />` : ''}
       - Bio: ${sanitizeHtml(submission.speakerBio)}<br />
       - Medias sociais: ${sanitizeHtml(submission.speakerSocialMedias)}<br />
+      ${submission.notes ? `- Observações: ${sanitizeHtml(submission.notes)}<br />` : ''}
       <hr />
       <br />
       Obrigado,<br />
@@ -83,6 +84,7 @@ const getMessageBody = (submission: Submission) => {
     ${sanitizeHtml(submission.type) === 'talk' ? `- Duration: ${submission.duration} minutes<br />` : ''}
     - Bio: ${sanitizeHtml(submission.speakerBio)}<br />
     - Social medias: ${sanitizeHtml(submission.speakerSocialMedias)}<br />
+    ${submission.notes ? `- Notes: ${sanitizeHtml(submission.notes)}<br />` : ''}
     <hr />
     <br />
     Best regards,<br />

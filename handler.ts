@@ -30,6 +30,7 @@ export const makeSubmissionFromBody = (rawBody: object, id?: string): Submission
     speakerBio: yup.string().required(),
     speakerSocialMedias: yup.string().required(),
     speakerEmail: yup.string().required(),
+    notes: yup.string().optional(),
   });
 
   const bodyValidated = schema.validateSync(rawBody);
@@ -138,6 +139,7 @@ export const getSubmissions = async (event: APIGatewayProxyEvent) => {
       speakerBio: givenSubmissionRow.speakerBio,
       speakerSocialMedias: givenSubmissionRow.speakerSocialMedias,
       speakerEmail: givenSubmissionRow.speakerEmail,
+      notes: givenSubmissionRow.notes,
     };
 
     return {

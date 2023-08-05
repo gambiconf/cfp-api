@@ -9,6 +9,7 @@ export type BodySchema = {
   speakerBio: string;
   speakerSocialMedias: string;
   speakerEmail: string;
+  notes?: string;
 };
 
 export type Submission = BodySchema & { id: string };
