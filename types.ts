@@ -1,7 +1,7 @@
 export type BodySchema = {
   speakerName: string;
   twitterHandler?: string;
-  type: 'talk' | 'sprint';
+  type: 'talk' | 'workshop';
   language: 'only_portuguese' | 'only_english' | 'portuguese_or_english';
   title: string;
   description: string;

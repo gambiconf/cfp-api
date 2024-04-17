@@ -19,7 +19,7 @@ export const makeSubmissionFromBody = (rawBody: object, id?: string): Submission
   const schema: yup.ObjectSchema<BodySchema> = yup.object().shape({
     speakerName: yup.string().required(),
     twitterHandler: yup.string(),
-    type: yup.string().oneOf(['talk', 'sprint']).required(),
+    type: yup.string().oneOf(['talk', 'workshop']).required(),
     language: yup
       .string()
       .oneOf(['only_portuguese', 'only_english', 'portuguese_or_english'])

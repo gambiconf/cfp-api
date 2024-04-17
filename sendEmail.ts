@@ -25,9 +25,10 @@ const getMessageBody = (submission: Submission) => {
       Após o término do CFP entraremos em contato.<br />
       <br />
       As previsão das próximas etapas são:<br />
-      - Encerramento do CFP: 27 de Agosto<br />
-      - Ensaio (opcional): 28 de Agosto até 18 de Novembro<br />
-      - Evento: 25 e 26 de Novembro<br />
+      - Encerramento do CFP: 26 de Maio<br />
+      - Feedback do CFP: 16 de Junho<br />
+      - Ensaio (opcional): 23 de Junho até 6 de Outubro<br />
+      - Evento: 19 e 20 de Outubro<br />
       <br />
       Siga-nos no Twitter para ser o primeiro a saber das novidades: <a href="https://twitter.com/gambiconf">@gambiconf</a><br />
       <hr />
@@ -67,9 +68,10 @@ const getMessageBody = (submission: Submission) => {
     <br />
     Here's an overview of the upcoming stages:<br />
     <br />
-    - CFP deadline: August 27th<br />
-    - Optional dry-run: August 28th to November 18th<br />
-    - Event: November 25th and 26th<br />
+    - CFP deadline: May 26th<br />
+    - CFP feedback: June 16th<br />
+    - Optional dry-run: June 23th to October 6th<br />
+    - Event: October 19th and 20th<br />
     <br />
     For the latest updates and news, we encourage you to follow us on Twitter at <a href="https://twitter.com/gambiconf">@gambiconf</a>.<br />
     We will share updates there first, ensuring you stay informed.<br />
