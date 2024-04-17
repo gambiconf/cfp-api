@@ -1,4 +1,5 @@
 import { GoogleSpreadsheet } from 'google-spreadsheet';
+import { JWT } from 'google-auth-library';
 import { makeSubmissionFromBody } from './handler';
 import { sendMail } from './sendEmail';
 import clientSecret from './client_secret.json';
@@ -21,9 +22,14 @@ async function main() {
 
   const submission = makeSubmissionFromBody(body);
 
-  const googleSheetID = process.env.SHEET_ID;
-  const sheet = new GoogleSpreadsheet(googleSheetID);
-  await sheet.useServiceAccountAuth(clientSecret);
+  const serviceAccountAuth = new JWT({
+    email: clientSecret.client_email,
+    key: clientSecret.private_key,
+    scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+  });
+
+  const googleSheetID = process.env.SHEET_ID!;
+  const sheet = new GoogleSpreadsheet(googleSheetID, serviceAccountAuth);
   await sheet.loadInfo();
 
   const tab = sheet.sheetsByTitle.CFP;

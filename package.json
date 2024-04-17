@@ -15,26 +15,26 @@
     "deploy:funcions": "sls deploy function --function getSubmissions && sls deploy function --function postSubmissions && sls deploy function --function putSubmissions"
   },
   "dependencies": {
-    "@aws-sdk/client-ses": "^3.359.0",
+    "@aws-sdk/client-ses": "^3.556.0",
     "dedent-js": "^1.0.1",
-    "dotenv": "^16.3.1",
-    "google-spreadsheet": "^3.3.0",
-    "sanitize-html": "^2.11.0",
-    "uuid": "^9.0.0",
-    "yup": "^1.2.0"
+    "dotenv": "^16.4.5",
+    "google-auth-library": "^9.8.0",
+    "google-spreadsheet": "^4.1.1",
+    "sanitize-html": "^2.13.0",
+    "uuid": "^9.0.1",
+    "yup": "^1.4.0"
   },
   "devDependencies": {
     "@serverless/eslint-config": "^5.1.0",
-    "@types/aws-lambda": "^8.10.119",
-    "@types/google-spreadsheet": "^3.3.2",
-    "@types/sanitize-html": "^2.9.0",
-    "eslint": "^7.32.0",
-    "eslint-plugin-import": "^2.27.5",
-    "prettier": "^2.8.8",
-    "serverless": "^3.32.2",
+    "@types/aws-lambda": "^8.10.137",
+    "@types/sanitize-html": "^2.11.0",
+    "eslint": "^8.57.0",
+    "eslint-plugin-import": "^2.29.1",
+    "prettier": "^3.2.5",
+    "serverless": "^3.38.0",
     "serverless-dotenv-plugin": "^6.0.0",
     "serverless-plugin-typescript": "^2.1.5",
-    "ts-node": "^10.9.1",
-    "typescript": "^5.1.6"
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
   }
 }

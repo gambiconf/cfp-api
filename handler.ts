@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import type { APIGatewayProxyEvent } from 'aws-lambda';
+import { JWT } from 'google-auth-library';
 import { GoogleSpreadsheet, GoogleSpreadsheetRow, GoogleSpreadsheetWorksheet } from 'google-spreadsheet';
 import * as yup from 'yup';
 import clientSecret from './client_secret.json';
@@ -42,12 +43,17 @@ export const makeSubmissionFromBody = (rawBody: object, id?: string): Submission
 };
 
 const loadGoogleSheetCFP = async () => {
-  const googleSheetID = process.env.SHEET_ID;
+  const googleSheetID = process.env.SHEET_ID!;
 
-  const sheet = new GoogleSpreadsheet(googleSheetID);
+  const serviceAccountAuth = new JWT({
+    email: clientSecret.client_email,
+    key: clientSecret.private_key,
+    scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+  });
+
+  const sheet = new GoogleSpreadsheet(googleSheetID, serviceAccountAuth);
 
   try {
-    await sheet.useServiceAccountAuth(clientSecret);
     await sheet.loadInfo();
   } catch (error) {
     console.error({
@@ -83,9 +89,9 @@ const loadGoogleSheetCFP = async () => {
 };
 
 const getSubmissionRow = async (id: string, sheetTab: GoogleSpreadsheetWorksheet) => {
-  let allSubmissionsRow: GoogleSpreadsheetRow[];
+  let allSubmissionsRow: GoogleSpreadsheetRow<Submission>[];
   try {
-    allSubmissionsRow = await sheetTab.getRows();
+    allSubmissionsRow = await sheetTab.getRows<Submission>();
   } catch (error) {
     console.error({
       tag: '[FATAL ERROR] Could not get the submissions',
@@ -97,7 +103,7 @@ const getSubmissionRow = async (id: string, sheetTab: GoogleSpreadsheetWorksheet
     throw error;
   }
 
-  const givenSubmissionRow = allSubmissionsRow.find((submission) => submission.id === id);
+  const givenSubmissionRow = allSubmissionsRow.find((submission) => submission.get('id') === id);
   if (!givenSubmissionRow) {
     console.error({
       tag: '[NOT FOUND] Could not find the submission with the given id',
@@ -128,18 +134,18 @@ export const getSubmissions = async (event: APIGatewayProxyEvent) => {
     const givenSubmissionRow = await getSubmissionRow(id, sheetTab);
 
     const givenSubmission: Submission = {
-      id: givenSubmissionRow.id,
-      speakerName: givenSubmissionRow.speakerName,
-      twitterHandler: givenSubmissionRow.twitterHandler,
-      type: givenSubmissionRow.type,
-      language: givenSubmissionRow.language,
-      title: givenSubmissionRow.title,
-      description: givenSubmissionRow.description,
-      duration: givenSubmissionRow.duration,
-      speakerBio: givenSubmissionRow.speakerBio,
-      speakerSocialMedias: givenSubmissionRow.speakerSocialMedias,
-      speakerEmail: givenSubmissionRow.speakerEmail,
-      notes: givenSubmissionRow.notes,
+      id: givenSubmissionRow.get('id'),
+      speakerName: givenSubmissionRow.get('speakerName'),
+      twitterHandler: givenSubmissionRow.get('twitterHandler'),
+      type: givenSubmissionRow.get('type'),
+      language: givenSubmissionRow.get('language'),
+      title: givenSubmissionRow.get('title'),
+      description: givenSubmissionRow.get('description'),
+      duration: givenSubmissionRow.get('duration'),
+      speakerBio: givenSubmissionRow.get('speakerBio'),
+      speakerSocialMedias: givenSubmissionRow.get('speakerSocialMedias'),
+      speakerEmail: givenSubmissionRow.get('speakerEmail'),
+      notes: givenSubmissionRow.get('notes'),
     };
 
     return {
