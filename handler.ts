@@ -6,6 +6,7 @@ import * as yup from 'yup';
 import clientSecret from './client_secret.json';
 import type { BodySchema, Submission } from './types';
 import { sendMail } from './sendEmail';
+import { createNewSubmissionMessage, createUpdatedSubmissionMessage, sendTelegramMessage } from './TelegramApi';
 
 require('dotenv').config();
 
@@ -243,7 +244,19 @@ export const postSubmissions = async (event: APIGatewayProxyEvent) => {
       });
       throw error;
     }
-
+    try {
+      const notificationMessage = createNewSubmissionMessage(submission);
+      await sendTelegramMessage(notificationMessage);
+    } catch (error) {
+      console.error({
+        tag: '[FATAL ERROR] Could not send Telegram Message',
+        metadata: {
+          event: JSON.stringify(event),
+          message: error?.message,
+          stack: error?.stack,
+        },
+      });
+    }
     return {
       headers: {
         'Access-Control-Allow-Origin': '*',
@@ -355,7 +368,19 @@ export const putSubmissions = async (event: APIGatewayProxyEvent) => {
       });
       throw error;
     }
-
+    try {
+      const notificationMessage = createUpdatedSubmissionMessage(submission);
+      await sendTelegramMessage(notificationMessage);
+      } catch (error) {
+        console.error({
+          tag: '[FATAL ERROR] Could not send Telegram Message',
+          metadata: {
+            event: JSON.stringify(event),
+            message: error?.message,
+            stack: error?.stack,
+          },
+        });
+      }
     return {
       headers: {
         'Access-Control-Allow-Origin': '*',
